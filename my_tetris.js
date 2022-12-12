@@ -117,6 +117,7 @@ const moves = {
     [key_input.shift]: () => holdPiece(),
     [key_input.c]: () => holdPiece()
 };
+let nextPiecesId = sevenBagGenerator();
 
 let time = { start:0, elapsed: 0, level: 1000};
 
@@ -139,8 +140,6 @@ class Board{
     }
 
     clearBoard() {
-        console.log('clear teh board!!')
-        // updateScore();
         return Array.from(
             {length: ROWS}, () => Array(COLS).fill(0)
         )
@@ -149,12 +148,6 @@ class Board{
     setNextPiece() {
         const { width, height } = this.nextCtx.canvas;
         this.nextPiece = new Piece(this.nextCtx);
-        if (this.nextPieces.length > 1) {
-            this.nextPiece.pieceId = this.nextPieces.shift();
-        } else {
-            this.nextPieces = this.sevenBagGenerator();
-            this.nextPiece.pieceId = this.nextPieces.shift();
-        }
         this.nextCtx.clearRect(0, 0, width, height);
         this.nextPiece.drawNextPiece();
     }
@@ -189,7 +182,6 @@ class Board{
     }
 
     draw() {
-        // console.log(this.piece.x, this.piece.y)
         this.grid.forEach((row, y) => {
             row.forEach((cell, x) => {
                 this.ctx.lineWidth = .06375;
@@ -224,15 +216,11 @@ class Board{
             this.rotateRight(piece)
         }
         if (direction == 'left') {
-            // this.piece.shape.map((row) => {return row.reverse})
             this.rotateLeft(piece);
-            // piece.shape.map((row)=>row.reverse());
         }
     }
 
     rotateRight(arr) {
-        console.log('pasted in the line below to try and see if that would solve p being undefined at line 161')
-        // let p = JSON.parse(JSON.stringify(arr));
         let resultArr = [];
         let i = 0;
         console.log(arr.shape)
@@ -349,29 +337,19 @@ class Board{
         this.piece.y = initial_y;
         return temp
     }
-
-    sevenBagGenerator() {
-        let bag = [0,1,2,3,4,5,6];
-        let result = [];
-        while (bag.length > 0) {
-            let randomIndex = Math.floor(Math.random() * bag.length);
-            result.push(bag[randomIndex]);
-            bag.splice(randomIndex, 1);
-        }
-        return result;
-    }
 }
 
 // tetromino class
 class Piece {
     constructor(ctx) {
         this.ctx = ctx;
-
-        // const randomPiece = sevenBagGenerator();
-        // const result = COLORS.filter(obj.a => return obj.a === sevenBagGenerator())
-        // const pieceId = originalPieces.indexOf(randomPiece);
-
-        const pieceId = this.randomizePieceType(COLORS.length);
+        let pieceId;
+        if (nextPiecesId.length > 1) {
+            pieceId = nextPiecesId.shift();
+        } else {
+            nextPiecesId = sevenBagGenerator();
+            pieceId = nextPiecesId.shift();
+        }
         this.shape = SHAPES[pieceId];
         this.color = COLORS[pieceId];
         this.holdCounter = 0;
@@ -428,8 +406,6 @@ class Piece {
     move(piece_coordinate) {
         this.x = piece_coordinate.x;
         this.y = piece_coordinate.y;
-        // not sure if the line below is necessary
-        // this.shape = piece_coordinate.shape;
     }
 
 
@@ -442,17 +418,9 @@ class Piece {
 
 function handleKeyPress(event) {
     event.preventDefault();
-    console.log(moves[event.keyCode])
-    console.log(event.keyCode)
-    // when the keycode is struck i want to move the board piece  corresponding to the key object
     if (moves[event.keyCode]) {
-        console.log("come back to this & see if you can implement the move on your own - dont understand their function")
         let p = moves[event.keyCode](board.piece);
-        // !!!!! ive put this validation here because p is undefined for the up key & the q key
-        // !!!!!to start off either look at this bug - or - work on the hard drop
-        console.log('at some point look at this bug - p doesnt work for rotate function? ')
         if (event.keyCode === 37 || event.keyCode === 39 || event.keyCode === 40){
-            // console.log(event.keyCode)
             if (board.validPosition(p)){
                 board.piece.move(p);
                 if (event.keyCode === 40) {
@@ -470,24 +438,12 @@ function handleKeyPress(event) {
             }
         }
         if ((event.keyCode === 80 && isRunning) || (event.keyCode ===  key_input[f1] && isRunning)){
-            console.log('why does this only work with the f1 input above bug?')
-            console.log('puased!')
-
-            // if (!isRunning) {
-            //     isRunning = true;
-            //     return;
-            // }
             isRunning = false;
         }
         if ((event.keyCode === 80 && !isRunning) || (event.keyCode ===  key_input[f1] && !isRunning)){
-            console.log('why does this only work with the f1 input above bug?')
-            console.log('unPuased!')
-            // if (!isRunning) {
-            //     isRunning = true;
-            //     return;
-            // }
             isRunning = true;
-            animate();
+            // animate();
+            countdown(animate);
         }
         // console.log('end game keycode works without the following below?')
         // if (event.keyCode === 27) {
@@ -511,12 +467,9 @@ function addEventListener() {
 }
 
 function animate(now = 0) {
-    // update elapsed time
     time.elapsed = now - time.start;
 
-    // if elapsed time has passed time for current livel
     if (time.elapsed > time.level) {
-        // restart counting from now for level
         time.start = now;
 
         if (!board.drop()) {
@@ -524,10 +477,10 @@ function animate(now = 0) {
             return
         }
     }
-    // console.log(isRunning)
-    // draw();
+
     if (!isRunning) {
         ctx.fillStyle = 'black';
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         ctx.fillRect(1,3,8,1.2);
         ctx.font = '1px monospace';
         ctx.fillStyle = 'yellow';
@@ -536,6 +489,25 @@ function animate(now = 0) {
     }
     draw();
     requestId = requestAnimationFrame(animate);
+}
+
+function countdown(callbackFunc) {
+    let timer = 3;
+    let counter = 0;
+    ctx.font = "4px monospace";
+    ctx.fillStyle = "black";
+     if (timer > 0) {
+        counter = setInterval(() => {
+            if (timer === 0) {
+                callbackFunc();
+                clearInterval(counter);
+                return;
+            }
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.fillText(timer, 4, 10);
+            timer--;
+        }, 1000)
+    }
 }
 
 function play() {
@@ -602,13 +574,12 @@ function gameOver() {
 }
 
 function draw() {
-    // const { width, height } = ctx.canvas;
+
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     nextCtx.clearRect(0, 0,nextCtx.canvas.width,nextCtx.canvas.height);
     holdCtx.clearRect(0, 0,nextCtx.canvas.width,nextCtx.canvas.height);
 
     board.draw();
-    console.log(`look ahead: ${board.calculateLookAhead()}`)
     board.piece.drawLookAhead(board.calculateLookAhead());
     board.piece.drawCurrentPiece();
     board.nextPiece.drawNextPiece();
@@ -617,6 +588,16 @@ function draw() {
     }
 }
 
+function sevenBagGenerator() {
+    let bag = [0,1,2,3,4,5,6];
+    let result = [];
+    while (bag.length > 0) {
+        let randomIndex = Math.floor(Math.random() * bag.length);
+        result.push(bag[randomIndex]);
+        bag.splice(randomIndex, 1);
+    }
+    return result;
+}
 
 
 
@@ -641,24 +622,24 @@ function randomSort() {
     return Math.random() > .5 ? -1 : 1;
 }
 
-function sevenBagGenerator() {
-    // if current bag gets small enough, add the next bag to it, and pull a new next bag
-    console.log('were in the generator....')
-    let nextBag = sortedPieces.slice(0).sort(randomSort);
-    let currentBag = sortedPieces.slice(0).sort(randomSort);
-    console.log(nextBag)
-    console.log(currentBag)
-    currentPiece = currentBag[0];
-    currentBag.splice(0,1);
+// function sevenBagGenerator() {
+//     // if current bag gets small enough, add the next bag to it, and pull a new next bag
+//     console.log('were in the generator....')
+//     let nextBag = sortedPieces.slice(0).sort(randomSort);
+//     let currentBag = sortedPieces.slice(0).sort(randomSort);
+//     console.log(nextBag)
+//     console.log(currentBag)
+//     currentPiece = currentBag[0];
+//     currentBag.splice(0,1);
 
-    if (currentBag.length < 3) {
-        for (let i = 0; i < nextBag.length; i++ ) {
-            currentBag.push(nextBag[i]);
-        }
-    }
-    nextBag = sortedPieces.sort(randomSort);
-    return currentBag[0];
-}
+//     if (currentBag.length < 3) {
+//         for (let i = 0; i < nextBag.length; i++ ) {
+//             currentBag.push(nextBag[i]);
+//         }
+//     }
+//     nextBag = sortedPieces.sort(randomSort);
+//     return currentBag[0];
+// }
 function cancelGame() {
     // console.log("cancel the game!")
     console.log('game over')
@@ -688,37 +669,37 @@ function pause() {
 }
 // const timer = document.getElementById('timer');
 
-function timer(e) {
-    if (requestId) {
-        pause();
-    } else {
-        let isPaused = ctx.paused;
-        if (!isPaused) {
+// function timer(e) {
+//     if (requestId) {
+//         pause();
+//     } else {
+//         let isPaused = ctx.paused;
+//         if (!isPaused) {
 
-        }
-        let count = 3;
-        timer = count;
-        countdown();
-    }
-}
+//         }
+//         let count = 3;
+//         timer = count;
+//         countdown();
+//     }
+// }
 
-function countdown() {
-    count --;
-    timer = count;
-    if (count <= 0) {
-        clearInterval(counter)
-        if (!isPaused) {
-            play();
-        } else {
-            ctx.paused = false;
-            timer = '';
-            animate();
-            return;
-        }
-        animate();
-        return;
-    }
-}
+// function countdown() {
+//     count --;
+//     timer = count;
+//     if (count <= 0) {
+//         clearInterval(counter)
+//         if (!isPaused) {
+//             play();
+//         } else {
+//             ctx.paused = false;
+//             timer = '';
+//             animate();
+//             return;
+//         }
+//         animate();
+//         return;
+//     }
+// }
 
 // !!!! ive implemented a pause feature and a game over feature
 // !!!! the pause feature works but only if i include the f1 statement which draws an error????
