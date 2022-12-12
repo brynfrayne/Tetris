@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Tetris</title>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <button onclick="play()">Play</button>
+            <h3>Controls</h3>
+            <p>Move Piece:
+                Arrow Keys
+                <!-- <img class="keys" src="./keys.png" alt="" srcset=""> -->
+            </p>
+            <p>Rotate Left: Q</p>
+            <p>Rotate Right: Up Arrow</p>
+            <p>Swap: Shift</p>
+            <p>Hard Drop: Spacebar</p>
+            <p>Pause: P</p>
+            <p>Quit: Esc</p>
+        </div>
+        <!-- <div> -->
+            <div>
+                <canvas class="game-board" id="board"></canvas>
+            </div>
+            <div>
+                <p>Score: <span id="score">0</span></p>
+                <p>Lines: <span id="lines">0</span></p>
+                <p>Level: <span id="level">0</span></p>
+                <p class="piece-label">Next: </p>
+                <canvas id="next" class="next"></canvas>
+                <p class="piece-label">Hold: </p>
+                <canvas id="hold" class="hold"></canvas>
+            </div>
+        <!-- </div> -->
+    </div>
+    <!-- <script type="text/javascript" src="constants.js"></script>
+    <script type="text/javascript" src="board.js"></script>
+    <script type="text/javascript" src="pieces.js"></script> -->
+    <script type="text/javascript" src="my_tetris.js"></script>
+</body>
+</html>

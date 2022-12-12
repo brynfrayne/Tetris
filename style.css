@@ -1,0 +1,24 @@
+* {
+    font-family: monospace;
+  }
+.keys {
+  /* width: 10rem; */
+  height: 6rem;
+}
+.container {
+    /* display: grid;
+    grid-template-columns: 20rem 12.5rem; */
+    display: flex;
+}
+.container div {
+  padding: 1rem;
+}
+.game-board {
+    border: solid 2px;
+  }
+  /* .next {
+    border: solid 2px;
+  } */
+  /* .hold {
+    border: solid 2px;
+  } */
