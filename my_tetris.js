@@ -1,14 +1,3 @@
-// window.addEventListener('DOMContentLoaded', () => {
-//     const play = document.getElementById('play');
-//     play.addEventListener('click', (event) => {
-//         console.log('clicked');
-//         play()
-//         play.style.display = 'none';
-//         document.querySelector('.play-holder').style.display = 'none';
-//     }
-//     )
-// })
-
 // constants
 let requestId;
 const COLS = 10;
@@ -111,15 +100,7 @@ const pause = new Audio('./se_game_pause.wav');
 const move = new Audio('./se_game_move.wav');
 const fall = new Audio('./se_game_fixa.wav');
 
-// const line = new Audio('./success.wav');
-// const gameover = new Audio('./gameover.wav');
-
-
-
-
 // Size canvas for main board
-// ctx.canvas.width = COLS * BLOCK_SIZE;
-// ctx.canvas.height = ROWS-20 * BLOCK_SIZE;
 ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
 
 // Size canvas for four blocks.
@@ -266,79 +247,14 @@ class Board{
             rotate.play();
           }
         }
-        console.log(p)
         return p;
       }
-
-    // rotate(piece, direction) {
-    //     console.log('were rotating')
-    //     if (direction == 'right') {
-    //         return this.rotateRight(piece)
-    //     }
-    //     if (direction == 'left') {
-    //         return this.rotateLeft(piece);
-    //     }
-    // }
-
-    // rotateRight(arr) {
-    //     let resultArr = [];
-    //     let i = 0;
-    //     console.log(arr.shape)
-    //     while (i < arr.shape[0].length){
-    //         let newArr = [];
-    //         resultArr.push(newArr);
-    //         i++;
-    //         }
-
-    //     for (let row = arr.shape.length-1; row >= 0; row--){
-    //         for (let column = 0; column < arr.shape[0].length; column++){
-    //             resultArr[column].push(arr.shape[row][column])
-    //         }
-    //     }
-    //     console.log(resultArr);
-    //     arr.shape = resultArr;
-    //     console.log(arr)
-    //     return arr;
-    //     }
-
-    // rotateLeft(arr) {
-    //     let resultArr = [];
-    //     let i = 0;
-    //     // let temp = arr
-    //     // below creates an array of arrays with the same length as the number of columns
-    //     while (i < arr.shape[0].length){
-    //         let newArr = [];
-    //         resultArr.push(newArr);
-    //         i++;
-    //         }
-
-    //     for (let row = 0; row < arr.shape.length; row++){
-    //         const reversedRow = arr.shape[row].reverse();
-    //         for (let column = 0; column < arr.shape[0].length; column++){
-    //             resultArr[column].push(reversedRow[column])
-    //         }
-    //     }
-    //     // console.log(resultArr);
-    //     // temp.shape = resultArr;
-
-    //     // if (this.validPosition(temp)) {
-    //     //     console.log(temp.shape)
-    //     //     arr.shape = resultArr;
-    //     //     return true;
-    //     // } else {
-    //     //     return false;
-    //     // }
-    //     return resultArr;
-    //     }
 
     validPosition(piece) {
         return piece.shape.every((row, dy) => {
             return row.every((cell, dx) => {
                 let x = piece.x + dx
                 let y = piece.y + dy
-                // console.log(x, y)
-                // console.log(this.inBoard(x, y))
-                // console.log(this.isNotOccupied(x, y))
 
                 return cell === 0 || this.inBoard(x, y) && this.isNotOccupied(x, y)
             })
@@ -351,12 +267,7 @@ class Board{
             x < COLS &&
             y < ROWS
         )
-        // if (x >= 0 && x < COLS && y < ROWS) {
-        //     return true
-        // } else {
-        //     move.play()
-        //     return false
-        // }
+        
     }
 
     isNotOccupied(x, y) {
@@ -410,9 +321,6 @@ class Board{
 
     calculateLookAhead() {
         let initial_y = this.piece.y;
-        // this.piece.y = ROWS - 1;
-        // this.piece.y = ROWS - 1;
-
 
         while (this.validPosition(this.piece) && this.piece.y <= ROWS){
             this.piece.y ++;
@@ -466,7 +374,6 @@ class Piece {
                     // below is trying to add depth to the pieces
                     this.ctx.save();
                     this.ctx.translate(this.x + x, this.y + y);
-                    // this.ctx.fillRect(0, 0, 1, 1);
                     this.ctx.restore();
                     this.ctx.fillRect(this.x + x, this.y + y, 1, 1);
                 }
@@ -488,7 +395,6 @@ class Piece {
                     // below is trying to add depth to the pieces
                     this.ctx.save();
                     this.ctx.translate(this.x + x, this.y + y);
-                    // this.ctx.fillRect(0, 0, 1, 1);
                     this.ctx.restore();
                     this.ctx.fillRect(x, y, 1, 1);
                 }
@@ -512,7 +418,6 @@ class Piece {
                     // below is trying to add depth to the pieces
                     this.ctx.save();
                     this.ctx.translate(this.x + x, this.y + y);
-                    // this.ctx.fillRect(0, 0, 1, 1);
                     this.ctx.restore();
                     this.ctx.fillRect(this.x + x, this.y + y, 1, 1);
                 }
@@ -589,94 +494,11 @@ function handleKeyPress(event) {
         move.play();
 
       } else {
-        // new piece location is not valid
-        // we hit a wall or another piece...
-        // implement t-spin logic here?
-
-        // sound effect: hit a wall.
+        
         fall.play();
       }
     }
   }
-
-// function handleKeyPress(event) {
-//     event.preventDefault();
-
-//     if (moves[event.keyCode]) {
-
-//         if (event.keyCode === key_input.left || event.keyCode === key_input.right || event.keyCode === key_input.down){
-//             let p = moves[event.keyCode](board.piece);
-
-//             if (board.validPosition(p)){
-//                 board.piece.move(p);
-
-//                 if (event.keyCode === key_input.down) {
-//                     softdrop.play();
-//                     board.accountValues.score += POINTS.SOFT_DROP;
-//                     updateScore();
-//                 } else {
-//                     move.play();
-//                 }
-//             }
-//         }
-//         if (event.keyCode === key_input.up) {
-//             let p = moves[event.keyCode](board.piece);
-//             if (board.validPosition(board.piece)){
-//                 rotate.play();
-//                 board.piece.move(board.piece);
-//             }
-//         }
-
-//         if (event.keyCode === key_input.ctrl || event.keyCode === key_input.z) {
-//             console.log(board.piece)
-//             let temp = board.piece;
-//             let p = moves[event.keyCode](temp);
-//             console.log(p)
-
-//             if (board.validPosition(p)){
-//                 console.log('this is valid position')
-//                 rotate.play();
-//                 board.piece.shape = p.shape;
-//             } else {
-//                 return;
-//             }
-
-//         }
-
-//         if (event.keyCode === key_input.shift || event.keyCode === key_input.c) {
-//             return moves[event.keyCode]();
-//         }
-
-//         if (event.keyCode === key_input.space) {
-//             let p = moves[event.keyCode](board.piece);
-
-//             while(board.validPosition(p)){
-//                 board.piece.move(p);
-//                 board.accountValues.score += POINTS.HARD_DROP;
-//                 updateScore();
-//                 p = moves[key_input.space](board.piece);
-//             }
-//             hardDrop.play();
-//         }
-
-//         if (event.keyCode === key_input.p && isRunning || event.keyCode === key_input.f1 && isRunning) {
-//             isRunning = false;
-//             audioElement.pause();
-//             pause.play();
-//             return;
-//         }
-
-        // if (event.keyCode === key_input.p && !isRunning || event.keyCode === key_input.f1 && !isRunning){
-
-        //     isRunning = true;
-        //     return countdown(animate, 20);
-        // }
-
-//         if (event.keyCode === key_input.esc) {
-//             return moves[event.keyCode]();
-//         }
-//     }
-// }
 
 function addEventListener() {
     document.removeEventListener('keydown',handleKeyPress);
@@ -715,7 +537,7 @@ function countdown(callbackFunc, y) {
     let counter = 0;
     ctx.font = "4px monospace";
     ctx.fillStyle = "black";
-    //  if (timer > 0) {
+    
         counter = setInterval(() => {
             if (timer === 0) {
                 callbackFunc();
@@ -733,10 +555,8 @@ function countdown(callbackFunc, y) {
 
 function play() {
 
-    // const play = document.getElementById('play');
     const playButton = document.getElementById('play-button');
-    // play.style.display = 'none';
-    // document.querySelector('.play-holder').style.display = 'none';
+    
     playButton.innerHTML = 'Restart';
     if (gameStarted) {
         board.ctx.translate(0,20)
@@ -884,75 +704,3 @@ function cancelGame() {
 
 
 
-
-
-
-
-// function addBackgroundMusicEventListener() {
-
-//     playButton.addEventListener('click', () => {
-//         console.log('music clicked')
-//         if (music.paused) {
-//             music.play();
-//         } else {
-//             music.pause();
-//         }
-//     })
-// }
-
-
-// switch statment for handling key inputs:
-        // let p = moves[event.keyCode](board.piece);
-
-            // switch (event.keyCode) {
-
-            //     case key_input.left || key_input.right || key_input.down:
-
-
-            //         if (board.validPosition(p)){
-            //             board.piece.move(p);
-
-            //             if (event.keyCode === key_input.down) {
-            //                 board.accountValues.score += POINTS.SOFT_DROP;
-            //                 updateScore();
-            //             }
-            //         }
-            //         break;
-            //     case key_input.up:
-
-            //         if (board.validPosition(p)){
-            //             board.piece.move(p);
-            //         }
-            //         break;
-            //     case key_input.q:
-
-            //         if (board.validPosition(p)){
-            //             board.piece.move(p);
-            //         }
-            //         break;
-            //     case key_input.space:
-
-            //         if (board.validPosition(p)){
-            //             board.piece.move(p);
-            //         }
-            //         break;
-            //     case key_input.shift || key_input.c || key_input.esc:
-            //         moves[event.keyCode]();
-            //         break;
-            //     case key_input.p || key_input.f1:
-            //         if (isRunning) {
-            //             isRunning = false;
-            //             break;
-            //         } else {
-            //             isRunning = true;
-            //             break;
-            //         }
-            //     default:
-            //         break;
-            // }
-
-
-            // this was the old way of randomizing the pieces:
-                // randomizePieceType(numOfPieces) {
-                //     return Math.floor(Math.random()* numOfPieces);
-                // }
