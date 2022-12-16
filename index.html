@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <title>Tetris</title>
+</head>
+<body>
+    <!-- <div class="play-holder">
+        <button id="play" class="play glow-on-hover" onclick="play()" >Play</button>
+    </div> -->
+    <div class="main-container">
+        <div class="img-container">
+            <!-- <img src="./images/roger-dean-tetris-logo.png"> -->
+            <img src="./logo.jpg">
+        </div>
+        <div class="container">
+            <div class="help-container">
+                <span id="timer"></span>
+                <button id="play-button" onclick="play()">Play</button>
+                <h3>Controls</h3>
+                <p>Move Piece: Arrow Keys</p>
+                <p>Rotate Left: Shift or C</p>
+                <p>Rotate Right: Up Arrow</p>
+                <p>Swap: Shift</p>
+                <p>Hard Drop: Spacebar</p>
+                <p>Pause: P</p>
+                <p>Quit: Esc</p>
+            </div>
+                <div class="game-container">
+                    <canvas class="game-board" id="board" width="300" height="600"></canvas>
+                </div>
+                <div class="score-container">
+                    <p>Score: <span id="score">0</span></p>
+                    <p>Lines: <span id="lines">0</span></p>
+                    <p>Level: <span id="level">0</span></p>
+                    <p class="piece-label">Next: </p>
+                    <canvas id="next" class="next"></canvas>
+                    <p class="piece-label">Hold: </p>
+                    <canvas id="hold" class="hold"></canvas>
+                </div>
+        </div>
+            <footer class="footer-container">
+            <span>
+                Tetris © 1985~2022 Tetris Holding.
+                Tetris logos, Tetris theme song and Tetriminos
+                are trademarks of Tetris Holding.
+                The Tetris trade dress is owned by Tetris Holding.
+                Licensed to The Tetris Company. Tetris Game Design by Alexey Pajitnov.
+                Tetris Logo Design by Roger Dean. All Rights Reserved.
+            </span>
+            </footer>
+    </div>
+    <audio src='https://upload.wikimedia.org/wikipedia/commons/e/e5/Tetris_theme.ogg'></audio>
+    <script type="text/javascript" src="my_tetris.js"></script>
+</body>
+</html>
