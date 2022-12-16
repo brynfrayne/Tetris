@@ -2,19 +2,21 @@
 ***
 
 ## Task
-TODO - What is the problem? And where is the challenge?
+
+The challenge is to recreate the classic game Tetris. The tetris is to be able to handle all of the game logic simultanesouly while being able to render it on the screen in a fluid and dynamic way.
 
 ## Description
-TODO - How have you solved the problem?
+
+I used javascript to code as to be able to leverage it's dom management, event handling, and the canvas element for rendering.
 
 ## Installation
-TODO - How to install your project? npm install? make? make re?
+
+To run the program you can either run the program locally by cloning the repo, and opening it in your browser, or by playing it on https://web-e40cf358e-5674.docode.us.qwasar.io/ after the server is running.
 
 ## Usage
-TODO - How does it work?
-```
-./my_project argument1 argument2
-```
+
+It works by setting a state of the board, then animate is called continously, so that whenver state does change due to some user interaction, the board is redrawn and it seems as though it is moving continously.
+
 
 ### The Core Team
 
