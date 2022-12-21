@@ -1,5 +1,7 @@
 <h1>Welcome to My Tetris</h1>
-<img src='./assets/images/Tetris_screenshot.png' width='75%' style='margin: 0 auto;'>
+<div style='text-align:center;'>
+    <img src='./assets/images/Tetris_screenshot.png' width='75%' alt='screenshot'>
+</div>
 
 
 <h2>Task:</h2>
