@@ -1,4 +1,4 @@
-<h2>Welcome to My Tetris</h2>
+<h1>Welcome to My Tetris</h1>
 
 <h2>Task:</h2>
 <p>The challenge is to recreate the classic game Tetris. The goal is to handle all of the game logic simultaneously while rendering it smoothly on the screen.</p>
