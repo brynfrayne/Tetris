@@ -1,5 +1,6 @@
 <h1>Welcome to My Tetris</h1>
-<img src='./assets/images/Tetris_screenshot.png' width='75%' margin='0 auto'>
+<img src='./assets/images/Tetris_screenshot.png' width='75%' style='margin: 0 auto;'>
+
 
 <h2>Task:</h2>
 <p>The challenge is to recreate the classic game Tetris. The goal is to handle all of the game logic simultaneously while rendering it smoothly on the screen.</p>
