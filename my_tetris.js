@@ -90,15 +90,15 @@ const holdCtx = holdCanvas.getContext('2d');
 const audioElement = document.querySelector('audio');
 
 // audio files
-const clear = new Audio('./se_game_single.wav'); // implemented
-const rotate = new Audio('./se_game_rotate.wav'); // implemented
-const end = new Audio('./end.wav'); // implemented
-const hardDrop = new Audio('./se_game_harddrop.wav'); // implemented
-const hold = new Audio('./se_game_hold.wav'); // implemented
-const softdrop = new Audio('./se_game_softdrop.wav'); // implemented
-const pause = new Audio('./se_game_pause.wav');
-const move = new Audio('./se_game_move.wav');
-const fall = new Audio('./se_game_fixa.wav');
+const clear = new Audio('./assets/audio/se_game_single.wav'); // implemented
+const rotate = new Audio('./assets/audio/se_game_rotate.wav'); // implemented
+const end = new Audio('./assets/audio/end.wav'); // implemented
+const hardDrop = new Audio('./assets/audio/se_game_harddrop.wav'); // implemented
+const hold = new Audio('./assets/audio/se_game_hold.wav'); // implemented
+const softdrop = new Audio('./assets/audio/se_game_softdrop.wav'); // implemented
+const pause = new Audio('./assets/audio/se_game_pause.wav');
+const move = new Audio('./assets/audio/se_game_move.wav');
+const fall = new Audio('./assets/audio/se_game_fixa.wav');
 
 // Size canvas for main board
 ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
@@ -267,7 +267,7 @@ class Board{
             x < COLS &&
             y < ROWS
         )
-        
+
     }
 
     isNotOccupied(x, y) {
@@ -494,7 +494,7 @@ function handleKeyPress(event) {
         move.play();
 
       } else {
-        
+
         fall.play();
       }
     }
@@ -537,7 +537,7 @@ function countdown(callbackFunc, y) {
     let counter = 0;
     ctx.font = "4px monospace";
     ctx.fillStyle = "black";
-    
+
         counter = setInterval(() => {
             if (timer === 0) {
                 callbackFunc();
@@ -556,7 +556,7 @@ function countdown(callbackFunc, y) {
 function play() {
 
     const playButton = document.getElementById('play-button');
-    
+
     playButton.innerHTML = 'Restart';
     if (gameStarted) {
         board.ctx.translate(0,20)
