@@ -1,7 +1,18 @@
+// window.addEventListener('DOMContentLoaded', () => {
+//     const play = document.getElementById('play');
+//     play.addEventListener('click', (event) => {
+//         console.log('clicked');
+//         play()
+//         play.style.display = 'none';
+//         document.querySelector('.play-holder').style.display = 'none';
+//     }
+//     )
+// })
+
 // constants
 let requestId;
 const COLS = 10;
-const ROWS = 20;
+const ROWS = 40;
 const BLOCK_SIZE = 30;
 const LINES_PER_LEVEL = 10;
 const LEVEL = {
@@ -39,13 +50,13 @@ const COLORS_obj = [
   ];
 const COLORS = ['cyan', 'blue', 'orange', 'yellow', 'green', 'purple', 'red'];
 const SHAPES = [
-[[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], // straight line
-[[2, 0, 0], [2, 2, 2], [0, 0, 0]], // j line
-[[0, 0, 3], [3, 3, 3], [0, 0, 0]], // l line
-[[4, 4], [4, 4]], // o line(square)
-[[0, 5, 5], [5, 5, 0], [0, 0, 0]], // s line
-[[0, 6, 0], [6, 6, 6], [0, 0, 0]], // T line
-[[7, 7, 0], [0, 7, 7], [0, 0, 0]] // z line
+    [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], // cyan
+    [[2, 0, 0], [2, 2, 2], [0, 0, 0]], // blue
+    [[0, 0, 3], [3, 3, 3], [0, 0, 0]], // orange
+    [[4, 4], [4, 4]], // yellow
+    [[0, 5, 5], [5, 5, 0], [0, 0, 0]], // green
+    [[0, 6, 0], [6, 6, 6], [0, 0, 0]], // purple
+    [[7, 7, 0], [0, 7, 7], [0, 0, 0]] // red
 ];
 const POINTS = {
     SINGLE: 100,
@@ -58,14 +69,15 @@ const POINTS = {
 const originalPieces = ['I', 'J','L','O','S','T','Z'];
 const sortedPieces = ['I', 'J','L','O','S','T','Z'];
 let isRunning = false;
+let gameStarted = false;
 const key_input = {
-    esc: 27, // pause
+    esc: 27, // gameover
     space: 32, // hard drop
     left: 37, // left
     up: 38, // rotate 90° clockwise
     right: 39, // right
     down: 40, // down
-    p: 80, // dont thing p is anyting
+    p: 80, // ppause
     q: 81, // q not sure if its anyting
     c: 67, // hold
     x: 88, // rotate 90° clockwise
@@ -85,9 +97,29 @@ const nextCtx = nextCanvas.getContext('2d');
 const holdCanvas = document.getElementById('hold');
 const holdCtx = holdCanvas.getContext('2d');
 
+// background music
+const audioElement = document.querySelector('audio');
+
+// audio files
+const clear = new Audio('./se_game_single.wav'); // implemented
+const rotate = new Audio('./se_game_rotate.wav'); // implemented
+const end = new Audio('./end.wav'); // implemented
+const hardDrop = new Audio('./se_game_harddrop.wav'); // implemented
+const hold = new Audio('./se_game_hold.wav'); // implemented
+const softdrop = new Audio('./se_game_softdrop.wav'); // implemented
+const pause = new Audio('./se_game_pause.wav');
+const move = new Audio('./se_game_move.wav');
+const fall = new Audio('./se_game_fixa.wav');
+
+// const line = new Audio('./success.wav');
+// const gameover = new Audio('./gameover.wav');
+
+
+
+
 // Size canvas for main board
-ctx.canvas.width = COLS * BLOCK_SIZE;
-ctx.canvas.height = ROWS * BLOCK_SIZE;
+// ctx.canvas.width = COLS * BLOCK_SIZE;
+// ctx.canvas.height = ROWS-20 * BLOCK_SIZE;
 ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
 
 // Size canvas for four blocks.
@@ -109,10 +141,12 @@ const moves = {
     [key_input.left]: (p) => ({...p, x: p.x - 1}),
     [key_input.right]: (p) => ({...p, x: p.x + 1}),
     [key_input.down]: (p) => ({...p, y: p.y + 1}),
-    [key_input.up]: (p) => board.rotate(p, 'right'),
-    [key_input.q]: (p) => board.rotate(p, 'left'),
+    [key_input.up]: (p) => ({...p, shape: board.rotate(p, 'right').shape}),
+    [key_input.ctrl]: (p) => ({...p, shape: board.rotate(p, 'left').shape}),
+    [key_input.z]: (p) => ({...p, shape: board.rotate(p, 'left').shape}),
     [key_input.space]: (p) => ({...p, y: p.y + 1 }),
     [key_input.p]: () => isRunning = !isRunning,
+    [key_input.f1]: () => isRunning = !isRunning,
     [key_input.esc]: () => cancelGame(),
     [key_input.shift]: () => holdPiece(),
     [key_input.c]: () => holdPiece()
@@ -125,6 +159,8 @@ let time = { start:0, elapsed: 0, level: 1000};
 class Board{
     constructor(ctx, nextCtx, holdCtx) {
         this.ctx = ctx;
+        this.ctx.translate(0, -20);
+
         this.nextCtx = nextCtx;
         this.holdCtx = holdCtx;
         this.grid = this.clearBoard();
@@ -155,7 +191,6 @@ class Board{
     setCurrentPiece() {
         this.piece = this.nextPiece;
         this.piece.ctx = this.ctx;
-        this.piece.x = 3;
         this.setNextPiece();
     }
 
@@ -196,13 +231,14 @@ class Board{
     }
 
     drop() {
+
         let p = moves[key_input.down](board.piece);
         if (this.validPosition(p)) {
             this.piece.move(p);
         } else {
             this.freeze();
             this.checkLines();
-            if(this.piece.y === 0) {
+            if(this.piece.y === 20) {
                 return false;
             }
             this.setCurrentPiece();
@@ -211,60 +247,98 @@ class Board{
     }
 
     rotate(piece, direction) {
-        console.log('were rotating')
-        if (direction == 'right') {
-            this.rotateRight(piece)
-        }
-        if (direction == 'left') {
-            this.rotateLeft(piece);
-        }
-    }
-
-    rotateRight(arr) {
-        let resultArr = [];
-        let i = 0;
-        console.log(arr.shape)
-        while (i < arr.shape[0].length){
-            let newArr = [];
-            resultArr.push(newArr);
-            i++;
+        // Clone with JSON for immutability.
+        let p = JSON.parse(JSON.stringify(piece));
+        console.log(piece)
+        if (!piece.hardDropped) {
+          // Transpose matrix
+          for (let y = 0; y < p.shape.length; y++) {
+            for (let x = 0; x < y; x++) {
+              [p.shape[x][y], p.shape[y][x]] = [p.shape[y][x], p.shape[x][y]];
             }
+          }
+          // Reverse the order of the columns.
+          if (direction === 'right') {
+            p.shape.forEach((row) => row.reverse());
+            rotate.play();
+          } else if (direction === 'left') {
+            p.shape.reverse();
+            rotate.play();
+          }
+        }
+        console.log(p)
+        return p;
+      }
 
-        for (let row = arr.shape.length-1; row >= 0; row--){
-            for (let column = 0; column < arr.shape[0].length; column++){
-                resultArr[column].push(arr.shape[row][column])
-            }
-        }
-        console.log(resultArr);
-        arr.shape = resultArr;
-        console.log(arr)
-        return arr;
-        }
+    // rotate(piece, direction) {
+    //     console.log('were rotating')
+    //     if (direction == 'right') {
+    //         return this.rotateRight(piece)
+    //     }
+    //     if (direction == 'left') {
+    //         return this.rotateLeft(piece);
+    //     }
+    // }
 
-    rotateLeft(arr) {
-        let resultArr = [];
-        let i = 0;
-        while (i < arr.shape[0].length){
-            let newArr = [];
-            resultArr.push(newArr);
-            i++;
-            }
+    // rotateRight(arr) {
+    //     let resultArr = [];
+    //     let i = 0;
+    //     console.log(arr.shape)
+    //     while (i < arr.shape[0].length){
+    //         let newArr = [];
+    //         resultArr.push(newArr);
+    //         i++;
+    //         }
 
-        for (let row = 0; row < arr.shape.length; row++){
-            const reversedRow = arr.shape[row].reverse();
-            for (let column = 0; column < arr.shape[0].length; column++){
-                resultArr[column].push(reversedRow[column])
-            }
-        }
-        arr.shape = resultArr;
-        return arr;
-        }
+    //     for (let row = arr.shape.length-1; row >= 0; row--){
+    //         for (let column = 0; column < arr.shape[0].length; column++){
+    //             resultArr[column].push(arr.shape[row][column])
+    //         }
+    //     }
+    //     console.log(resultArr);
+    //     arr.shape = resultArr;
+    //     console.log(arr)
+    //     return arr;
+    //     }
+
+    // rotateLeft(arr) {
+    //     let resultArr = [];
+    //     let i = 0;
+    //     // let temp = arr
+    //     // below creates an array of arrays with the same length as the number of columns
+    //     while (i < arr.shape[0].length){
+    //         let newArr = [];
+    //         resultArr.push(newArr);
+    //         i++;
+    //         }
+
+    //     for (let row = 0; row < arr.shape.length; row++){
+    //         const reversedRow = arr.shape[row].reverse();
+    //         for (let column = 0; column < arr.shape[0].length; column++){
+    //             resultArr[column].push(reversedRow[column])
+    //         }
+    //     }
+    //     // console.log(resultArr);
+    //     // temp.shape = resultArr;
+
+    //     // if (this.validPosition(temp)) {
+    //     //     console.log(temp.shape)
+    //     //     arr.shape = resultArr;
+    //     //     return true;
+    //     // } else {
+    //     //     return false;
+    //     // }
+    //     return resultArr;
+    //     }
 
     validPosition(piece) {
         return piece.shape.every((row, dy) => {
             return row.every((cell, dx) => {
                 let x = piece.x + dx
                 let y = piece.y + dy
+                // console.log(x, y)
+                // console.log(this.inBoard(x, y))
+                // console.log(this.isNotOccupied(x, y))
 
                 return cell === 0 || this.inBoard(x, y) && this.isNotOccupied(x, y)
             })
@@ -277,6 +351,12 @@ class Board{
             x < COLS &&
             y < ROWS
         )
+        // if (x >= 0 && x < COLS && y < ROWS) {
+        //     return true
+        // } else {
+        //     move.play()
+        //     return false
+        // }
     }
 
     isNotOccupied(x, y) {
@@ -287,12 +367,11 @@ class Board{
     }
 
     freeze() {
+        console.log('were freezing')
         this.piece.shape.forEach((row, y) => {
             row.forEach((cell, x) => {
                 if (cell > 0) {
                     this.grid[y + this.piece.y][x + this.piece.x] = cell;
-                    // index value y & x + the pieces coordinate equaling the cell's value work because this.piece is a fixed coordinate which corresponds to the top left coordinaet of the piece grid & so it adds x & y to that point for each piece block
-
                 }
             })
         })
@@ -302,6 +381,7 @@ class Board{
         let lines = 0;
         this.grid.forEach((row, y) => {
             if (row.every(cell => cell > 0)) {
+                clear.play();
                 lines ++;
                 this.accountValues.lines ++;
                 updateLevels();
@@ -310,7 +390,9 @@ class Board{
                 this.grid.splice(y, 1);
                 // add zero filled row at th top
                 this.grid.unshift(Array(COLS).fill(0));
+
             }
+
             if (lines > 0) {
                 this.accountValues.score += this.getLineClearPoints(lines);
             }
@@ -328,12 +410,14 @@ class Board{
 
     calculateLookAhead() {
         let initial_y = this.piece.y;
-        this.piece.y = ROWS - 1;
+        // this.piece.y = ROWS - 1;
+        // this.piece.y = ROWS - 1;
 
-        while (!this.validPosition(this.piece) && this.piece.y >= 0){
-            this.piece.y --;
+
+        while (this.validPosition(this.piece) && this.piece.y <= ROWS){
+            this.piece.y ++;
         }
-        let temp = this.piece.y;
+        let temp = this.piece.y - 1;
         this.piece.y = initial_y;
         return temp
     }
@@ -353,15 +437,24 @@ class Piece {
         this.shape = SHAPES[pieceId];
         this.color = COLORS[pieceId];
         this.holdCounter = 0;
+        this.hardDropped = false;
 
-        // starting position
-        this.x = 3;
-        this.y = 0;
+        if (this.shape === SHAPES[3]) {
+            this.x = 4;
+            this.y = 20;
+        } else if (this.shape === SHAPES[0]){
+            this.x = 3;
+            this.y = 19;
+        } else {
+            this.x = 3;
+            this.y = 20;
+        }
     }
 
     drawCurrentPiece() {
 
         this.ctx.fillStyle = this.color;
+        this.ctx.globalAlpha = 0.5;
         this.shape.forEach((row,y) => {
             row.forEach((cell, x) => {
                 if (cell > 0) {
@@ -369,12 +462,21 @@ class Piece {
                     this.ctx.strokeStyle = 'black';
                     this.ctx.strokeRect(this.x + x, this.y + y,1,1)
                     this.ctx.fillRect(this.x + x, this.y + y, 1, 1);
+
+                    // below is trying to add depth to the pieces
+                    this.ctx.save();
+                    this.ctx.translate(this.x + x, this.y + y);
+                    // this.ctx.fillRect(0, 0, 1, 1);
+                    this.ctx.restore();
+                    this.ctx.fillRect(this.x + x, this.y + y, 1, 1);
                 }
             })
         })
+        this.ctx.globalAlpha = 1;
     }
     drawNextPiece() {
         this.ctx.fillStyle = this.color;
+        this.ctx.globalAlpha = 0.5;
         this.shape.forEach((row,y) => {
             row.forEach((cell, x) => {
                 if (cell > 0) {
@@ -382,11 +484,20 @@ class Piece {
                     this.ctx.strokeStyle = 'black';
                     this.ctx.strokeRect(x, y,1,1)
                     this.ctx.fillRect(x, y, 1, 1);
+
+                    // below is trying to add depth to the pieces
+                    this.ctx.save();
+                    this.ctx.translate(this.x + x, this.y + y);
+                    // this.ctx.fillRect(0, 0, 1, 1);
+                    this.ctx.restore();
+                    this.ctx.fillRect(x, y, 1, 1);
                 }
             })
         })
     }
     drawLookAhead(aheadY) {
+        this.ctx.globalAlpha = 0.5;
+
         const prevY = this.y;
         this.y = aheadY;
         this.shape.forEach((row, y) =>{
@@ -397,69 +508,175 @@ class Piece {
                     this.ctx.lineWidth = .06375;
                     this.ctx.strokeStyle = 'black';
                     this.ctx.strokeRect((this.x + x) * 1, (this.y + y ) * 1,1,1);
+
+                    // below is trying to add depth to the pieces
+                    this.ctx.save();
+                    this.ctx.translate(this.x + x, this.y + y);
+                    // this.ctx.fillRect(0, 0, 1, 1);
+                    this.ctx.restore();
+                    this.ctx.fillRect(this.x + x, this.y + y, 1, 1);
                 }
             })
         })
         this.y = prevY;
     }
 
-    move(piece_coordinate) {
-        this.x = piece_coordinate.x;
-        this.y = piece_coordinate.y;
+    move(piece) {
+    if (!this.hardDropped) {
+        this.x = piece.x;
+        this.y = piece.y;
+    }
+    this.shape = piece.shape;
     }
 
-
-    randomizePieceType(numOfPieces) {
-        return Math.floor(Math.random()* numOfPieces);
+    hardDrop() {
+        this.hardDropped = true;
     }
 }
-
-
-
 function handleKeyPress(event) {
-    event.preventDefault();
-    if (moves[event.keyCode]) {
-        let p = moves[event.keyCode](board.piece);
-        if (event.keyCode === 37 || event.keyCode === 39 || event.keyCode === 40){
-            if (board.validPosition(p)){
-                board.piece.move(p);
-                if (event.keyCode === 40) {
-                    board.accountValues.score += POINTS.SOFT_DROP;
-                    updateScore();
-                }
-            }
-        }
-        if (event.keyCode === 32) {
-            while(board.validPosition(p)){
-                board.piece.move(p);
-                board.accountValues.score += POINTS.HARD_DROP;
-                updateScore();
-                p = moves[key_input.space](board.piece);
-            }
-        }
-        if ((event.keyCode === 80 && isRunning) || (event.keyCode ===  key_input[f1] && isRunning)){
-            isRunning = false;
-        }
-        if ((event.keyCode === 80 && !isRunning) || (event.keyCode ===  key_input[f1] && !isRunning)){
-            isRunning = true;
-            // animate();
-            countdown(animate);
-        }
-        // console.log('end game keycode works without the following below?')
-        // if (event.keyCode === 27) {
-        //     console.log('game over')
-        //     board.clearBoard();
-        //     cancelAnimationFrame(requestId);
-        //     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        //     nextCtx.clearRect(0, 0,nextCtx.canvas.width,nextCtx.canvas.height);
-        // }
-        else {
-            if (board.validPosition(board.piece)){
-                board.piece.move(board.piece);
-            }
-        }
+
+    // p for pause
+    if (event.keyCode === key_input.p && isRunning) {
+        isRunning = false;
+        audioElement.pause();
+        pause.play();
+        return;
     }
-}
+    if (event.keyCode === key_input.p && !isRunning){
+        isRunning = true;
+        return countdown(animate, 20);
+    }
+
+    // esc for end game
+    if (event.keyCode === key_input.esc) {
+      audioElement.pause();
+      audioElement.currrentTime = 0;
+      end.play();
+      gameOver();
+
+
+    } else if (moves[event.keyCode]) {
+      event.preventDefault();
+
+      // Get new state
+      let p = moves[event.keyCode](board.piece);
+      console.log(p)
+
+      if (event.keyCode === key_input.shift) {
+        return;
+      }
+
+      if (event.keyCode === key_input.space) {
+
+        // Hard drop
+        while (board.validPosition(p)) {
+            board.piece.move(p);
+            board.accountValues.score += POINTS.HARD_DROP;
+            updateScore();
+            p = moves[key_input.down](board.piece);
+        }
+        hardDrop.play();
+        board.piece.hardDrop();
+
+        // every other input thats valid
+    } else if (board.validPosition(p)) {
+        board.piece.move(p);
+        if (event.keyCode === key_input.down) {
+            softdrop.play();
+            board.accountValues.score += POINTS.SOFT_DROP;
+            updateScore();
+        }
+        move.play();
+
+      } else {
+        // new piece location is not valid
+        // we hit a wall or another piece...
+        // implement t-spin logic here?
+
+        // sound effect: hit a wall.
+        fall.play();
+      }
+    }
+  }
+
+// function handleKeyPress(event) {
+//     event.preventDefault();
+
+//     if (moves[event.keyCode]) {
+
+//         if (event.keyCode === key_input.left || event.keyCode === key_input.right || event.keyCode === key_input.down){
+//             let p = moves[event.keyCode](board.piece);
+
+//             if (board.validPosition(p)){
+//                 board.piece.move(p);
+
+//                 if (event.keyCode === key_input.down) {
+//                     softdrop.play();
+//                     board.accountValues.score += POINTS.SOFT_DROP;
+//                     updateScore();
+//                 } else {
+//                     move.play();
+//                 }
+//             }
+//         }
+//         if (event.keyCode === key_input.up) {
+//             let p = moves[event.keyCode](board.piece);
+//             if (board.validPosition(board.piece)){
+//                 rotate.play();
+//                 board.piece.move(board.piece);
+//             }
+//         }
+
+//         if (event.keyCode === key_input.ctrl || event.keyCode === key_input.z) {
+//             console.log(board.piece)
+//             let temp = board.piece;
+//             let p = moves[event.keyCode](temp);
+//             console.log(p)
+
+//             if (board.validPosition(p)){
+//                 console.log('this is valid position')
+//                 rotate.play();
+//                 board.piece.shape = p.shape;
+//             } else {
+//                 return;
+//             }
+
+//         }
+
+//         if (event.keyCode === key_input.shift || event.keyCode === key_input.c) {
+//             return moves[event.keyCode]();
+//         }
+
+//         if (event.keyCode === key_input.space) {
+//             let p = moves[event.keyCode](board.piece);
+
+//             while(board.validPosition(p)){
+//                 board.piece.move(p);
+//                 board.accountValues.score += POINTS.HARD_DROP;
+//                 updateScore();
+//                 p = moves[key_input.space](board.piece);
+//             }
+//             hardDrop.play();
+//         }
+
+//         if (event.keyCode === key_input.p && isRunning || event.keyCode === key_input.f1 && isRunning) {
+//             isRunning = false;
+//             audioElement.pause();
+//             pause.play();
+//             return;
+//         }
+
+        // if (event.keyCode === key_input.p && !isRunning || event.keyCode === key_input.f1 && !isRunning){
+
+        //     isRunning = true;
+        //     return countdown(animate, 20);
+        // }
+
+//         if (event.keyCode === key_input.esc) {
+//             return moves[event.keyCode]();
+//         }
+//     }
+// }
 
 function addEventListener() {
     document.removeEventListener('keydown',handleKeyPress);
@@ -477,40 +694,54 @@ function animate(now = 0) {
             return
         }
     }
-
     if (!isRunning) {
         ctx.fillStyle = 'black';
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.fillRect(1,3,8,1.2);
+        ctx.fillRect(1,23,8,1.2);
         ctx.font = '1px monospace';
         ctx.fillStyle = 'yellow';
-        ctx.fillText('PAUSED....',1.8, 4);
+        ctx.fillText('PAUSED....',1.8, 24);
         return
     }
+    audioElement.play();
+
     draw();
     requestId = requestAnimationFrame(animate);
 }
 
-function countdown(callbackFunc) {
+function countdown(callbackFunc, y) {
+    return new Promise((resolve) => {
     let timer = 3;
     let counter = 0;
     ctx.font = "4px monospace";
     ctx.fillStyle = "black";
-     if (timer > 0) {
+    //  if (timer > 0) {
         counter = setInterval(() => {
             if (timer === 0) {
                 callbackFunc();
                 clearInterval(counter);
+                resolve();
                 return;
             }
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.fillText(timer, 4, 10);
+            ctx.fillText(timer, 4, 10 + y);
+            hold.play();
             timer--;
         }, 1000)
-    }
+    })
 }
 
 function play() {
+
+    // const play = document.getElementById('play');
+    const playButton = document.getElementById('play-button');
+    // play.style.display = 'none';
+    // document.querySelector('.play-holder').style.display = 'none';
+    playButton.innerHTML = 'Restart';
+    if (gameStarted) {
+        board.ctx.translate(0,20)
+    }
+    gameStarted = true;
     isRunning = true;
     board = new Board(ctx, nextCtx, holdCtx);
     updateScore();
@@ -518,13 +749,15 @@ function play() {
     updateScore();
     addEventListener();
 
-    // if we have an old game running hten cancel it
     if (requestId) {
         cancelAnimationFrame(requestId);
     }
 
-    time.start = performance.now();
-    animate();
+
+    countdown(animate, 20).then(() => {
+        time.start = performance.now();
+        animate();
+    })
 }
 
 function holdPiece() {
@@ -540,7 +773,7 @@ function holdPiece() {
         board.piece.holdCounter ++;
         return;
     }
-
+    hold.play();
     board.swapCurrentAndHoldPiece();
     board.piece.holdCounter ++;
 
@@ -565,12 +798,18 @@ function updateLevels() {
 
 function gameOver() {
     cancelAnimationFrame(requestId);
+    isRunning = false;
+
+    audioElement.pause()
+    setTimeout(function() {
+        end.play();
+    }, 1000);
 
     ctx.fillStyle = 'black';
-    ctx.fillRect(1,3,8,1.2);
+    ctx.fillRect(1,23,8,1.2);
     ctx.font = '1px monospace';
     ctx.fillStyle = 'yellow';
-    ctx.fillText('GAME OVER....',1.8, 4);
+    ctx.fillText('GAME OVER....',1.8, 24);
 }
 
 function draw() {
@@ -599,111 +838,121 @@ function sevenBagGenerator() {
     return result;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 7 bag randomizer
-function randomSort() {
-    return Math.random() > .5 ? -1 : 1;
-}
-
-// function sevenBagGenerator() {
-//     // if current bag gets small enough, add the next bag to it, and pull a new next bag
-//     console.log('were in the generator....')
-//     let nextBag = sortedPieces.slice(0).sort(randomSort);
-//     let currentBag = sortedPieces.slice(0).sort(randomSort);
-//     console.log(nextBag)
-//     console.log(currentBag)
-//     currentPiece = currentBag[0];
-//     currentBag.splice(0,1);
-
-//     if (currentBag.length < 3) {
-//         for (let i = 0; i < nextBag.length; i++ ) {
-//             currentBag.push(nextBag[i]);
-//         }
-//     }
-//     nextBag = sortedPieces.sort(randomSort);
-//     return currentBag[0];
-// }
 function cancelGame() {
-    // console.log("cancel the game!")
-    console.log('game over')
+    isRunning = false;
+
     board.clearBoard();
     cancelAnimationFrame(requestId);
+
+    audioElement.pause()
+    setTimeout(function() {
+        end.play();
+    }, 1000);
+
+
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     nextCtx.clearRect(0, 0,nextCtx.canvas.width,nextCtx.canvas.height);
     holdCtx.clearRect(0, 0,nextCtx.canvas.width,nextCtx.canvas.height);
+
+    ctx.fillStyle = 'black';
+    ctx.fillRect(1,23,8,1.2);
+    ctx.font = '1px monospace';
+    ctx.fillStyle = 'yellow';
+    ctx.fillText('GAME OVER',1.9, 24);
+
+    setTimeout(() => {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(1,23,8,1.2);
+        ctx.font = '1px monospace';
+        ctx.fillStyle = 'yellow';
+        ctx.fillText('PLAY AGAIN',1.8, 24);
+    }
+    , 3000);
 }
 
 
 
-function pause() {
-    // if (!requestId) {
-    //     ctx.paused = true;
-    //     timer();
-    // }
-    // cancelAnimationFrame(requestId);
-    // requestId = null;
 
-    // ctx.fillStyle = 'black';
-    // ctx.fillRect(1, 3, 8, 1.2);
-    // ctx.font = '1px Arial';
-    // ctx.fillStyle = 'yellow';
-    // ctx.fillText('PAUSED', 3, 4);
-    // ctx.paused = true;
-}
-// const timer = document.getElementById('timer');
 
-// function timer(e) {
-//     if (requestId) {
-//         pause();
-//     } else {
-//         let isPaused = ctx.paused;
-//         if (!isPaused) {
 
-//         }
-//         let count = 3;
-//         timer = count;
-//         countdown();
-//     }
-// }
 
-// function countdown() {
-//     count --;
-//     timer = count;
-//     if (count <= 0) {
-//         clearInterval(counter)
-//         if (!isPaused) {
-//             play();
+
+
+
+
+
+
+
+
+
+
+
+// function addBackgroundMusicEventListener() {
+
+//     playButton.addEventListener('click', () => {
+//         console.log('music clicked')
+//         if (music.paused) {
+//             music.play();
 //         } else {
-//             ctx.paused = false;
-//             timer = '';
-//             animate();
-//             return;
+//             music.pause();
 //         }
-//         animate();
-//         return;
-//     }
+//     })
 // }
 
-// !!!! ive implemented a pause feature and a game over feature
-// !!!! the pause feature works but only if i include the f1 statement which draws an error????
-// !!!! i could get the game over feature to work but only by creating a cancel game function and passing it in to the moves object
 
-// !!!! next look at the qwasar mockup and continue implementing all key functionality!
+// switch statment for handling key inputs:
+        // let p = moves[event.keyCode](board.piece);
 
+            // switch (event.keyCode) {
+
+            //     case key_input.left || key_input.right || key_input.down:
+
+
+            //         if (board.validPosition(p)){
+            //             board.piece.move(p);
+
+            //             if (event.keyCode === key_input.down) {
+            //                 board.accountValues.score += POINTS.SOFT_DROP;
+            //                 updateScore();
+            //             }
+            //         }
+            //         break;
+            //     case key_input.up:
+
+            //         if (board.validPosition(p)){
+            //             board.piece.move(p);
+            //         }
+            //         break;
+            //     case key_input.q:
+
+            //         if (board.validPosition(p)){
+            //             board.piece.move(p);
+            //         }
+            //         break;
+            //     case key_input.space:
+
+            //         if (board.validPosition(p)){
+            //             board.piece.move(p);
+            //         }
+            //         break;
+            //     case key_input.shift || key_input.c || key_input.esc:
+            //         moves[event.keyCode]();
+            //         break;
+            //     case key_input.p || key_input.f1:
+            //         if (isRunning) {
+            //             isRunning = false;
+            //             break;
+            //         } else {
+            //             isRunning = true;
+            //             break;
+            //         }
+            //     default:
+            //         break;
+            // }
+
+
+            // this was the old way of randomizing the pieces:
+                // randomizePieceType(numOfPieces) {
+                //     return Math.floor(Math.random()* numOfPieces);
+                // }
